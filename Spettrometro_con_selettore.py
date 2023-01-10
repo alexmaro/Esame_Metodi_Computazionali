@@ -1,9 +1,5 @@
 #spettrometro di massa con selettore di velocità
 
-#ottimizzare in modo che le differenze angolari non passino
-#calcolare analiticamente la larghezza e/o la distanza di A2 in modo che non passino gli angolati
-#dire nel codice sta cosa
-
 """IN TUTTO IL CODICE SONO SCRITTE DIVERS PARTI E SPUNTI FRA TRIPLI APICI DOVE IPOTIZZO UN POSSIBILE CODICE ALTERNATIVO PER UNA 
 SIMULAZIONE PIU COMPLETA 3-DIMENSIONALE E DETTAGLIATA, SUPPONENDO DI AVER RICEVUTO PIU DATI INIZIALI RIGUARDO AL PROBLEMA"""
 
@@ -194,6 +190,13 @@ class Schermo:
                 print(f"Ione #{num_ione} rilevato nel sensore {j}")
         return 1
 
+    def arriva_ione_no_output (self, Ione_n, num_ione):
+        #itera tutti i pixel fino a trovare quello giusto e modifica il numero di rilevazioni di quel pixel
+        for j in range(1,self.mostra_num_pixel(),1):
+            if((self.low + (self.lista_pixel[j].mostra_dimensione() * (j+1))) > Ione_n) and ((self.low+(self.lista_pixel[j].mostra_dimensione() * (j))) <= Ione_n): #se il raggio di deflessione dell i esimo ione è compreso fra il pixel j-1 esimo e il j esimo lo conta sul j esimo pixel           
+                self.lista_pixel[j].ione_rilevato()
+        return 1
+
     def totale_rilevazioni(self):#restituisce il numero totale di rilevazioni dello schermo
         somma = 0
         for i in self.lista_pixel:
@@ -226,10 +229,164 @@ Acceso = True
 while Acceso == True:
 
 ### Finestra di dialogo iniziale e SCELTA
-    azione = input(f'Benvenuti nel software di simulazione di uno spettrometro di massa con selettore di velocità, cosa si desidera fare? \n\n 1) Simulazione con il metodo Montecarlo della deflessione di N (a scelta) ioni con massa a scelta fra 1 e 210, e grafico ipotizzando la risoluzione di massa A = 1, Produzione del grafico che mostra le prestazione dello strumento ottimizzato al variare di A \n\n 2) Produzione del grafico per una simulazione del macchinario con materiali a scelta (con relativa abbondanza isotopica) \n\n 0) ESCI \n\n')
+    azione = input(""" ###################################################################################################\n\n
+    Benvenuti nel software di simulazione di uno spettrometro di massa con selettore di velocità, cosa si desidera fare? \n
+    1) Simulazioni per isotopi a scelta del macchinario con numero di pixel e larghezza della fenditura variabile per osservare l'influenza di questi parametri sulla qualità e sulla risoluzione e quindi determinare le impostazioni efficaci \n
+    2) Dimostrazione con il metodo Montecarlo della deflessione nel macchinario ottimizzato di N (a scelta) ioni con massa a scelta fra 1 e 210 (variabile secondo una distribuzione Gaussiana), e grafico che dimostra la risoluzione A = 1\n 
+    3) Produzione del grafico per una simulazione del macchinario con materiali a scelta (con relativa abbondanza isotopica) \n\n 
+    0) ESCI \n\n""")
+
+
 
 ################################################ SCELTA 1 ##########################################################################
     if (azione == "1"):
+        #Finestra di dialogo per scelta numero di massa, con filtraggio input non validi
+        massa_valida = False
+        while massa_valida == False:
+            try:
+                num_massa = input(f'Quale massa ha lo ione che si desidera simulare? [da 1 a 210] \t')
+                num_massa = int(num_massa)
+                if (num_massa > 0) and (num_massa <= 210):
+                    num_massa = int(num_massa)   #io l ho provato random con 2, 55, 111, 160, 200, 210
+                    massa_valida = True
+                else:
+                    print("Numero non valido")
+            except:
+                print('Non è un numero, riprova\n')
+
+        decidi = False
+        while decidi == False:
+            try:
+                scel = input(f'Opzioni: \n 1) Vuoi andare direttamente ai risultati\n 2) Vuoi vedere una ad una tutte le simulazioni (sono 48!)\n\n\t')
+                scel = int(scel)
+                if (scel == 1) :   #io l ho provato random con 2, 55, 111, 160, 200, 210
+                    decidi = True
+                elif(scel == 2):
+                    decidi = True
+                else:
+                    print("Numero non valido")
+            except:
+                print('Non è un numero, riprova\n')
+
+        lista_altezze_fenditura2 = [0.0001,0.00025,0.0005,0.001,0.0025,0.005,0.025,]
+        lista_num_pixel = [220,211,213,215,220,225,230] 
+        p_alto_generatore_0 = 0.1
+        p_basso_generatore_0 = 0
+        
+        risultati = []
+        for alt_fendit in range(len(lista_altezze_fenditura2)):
+            for num_pixel_prova in lista_num_pixel:
+                Fascio1 = Fascio(4000)
+                for j in range(1000):
+                    altezza = np.random.uniform(low = p_basso_generatore_0 ,high = p_alto_generatore_0, size = 1) #genero posizione casuale
+                    altezza_z = float(altezza)
+                    Fascio1.aggiungi_ione(Ione(j,pos_x_generatore,0,altezza,v_selezionata,0,0, num_massa-1)) #ho messo solo la velocità su x dato che non ho abbastanza informazioni per fare il programma piu completo
+                    Fascio1.aggiungi_massa_pesi(num_massa-1)
+                    for i in range(2):
+                        Fascio1.aggiungi_ione(Ione(i,pos_x_generatore,0,altezza,v_selezionata,0,0, num_massa)) #ho messo solo la velocità su x dato che non ho abbastanza informazioni per fare il programma piu completo
+                        Fascio1.aggiungi_massa_pesi(num_massa)
+                    Fascio1.aggiungi_ione(Ione(j+1,pos_x_generatore,0,altezza,v_selezionata,0,0, num_massa+1)) #ho messo solo la velocità su x dato che non ho abbastanza informazioni per fare il programma piu completo
+                    Fascio1.aggiungi_massa_pesi(num_massa+1)
+
+                print(f"\n\n############## NUOVA RUN CON FENDITURE ALTE {lista_altezze_fenditura2[alt_fendit]} E {num_pixel_prova} PIXEL ##############  \n")
+                print(f"\nAttualmente ci sono: {Fascio1.mostra_massa_pesi()} dove [massa ione, numero ioni presenti]\n")
+                print(Fascio1.attuale_num_ioni())
+
+                lista_non_pas2 = []
+                if (scel == 1):
+                    print(f"Arrivati sulla seconda fenditura quindi vediamo in base alle dimensioni della seconda fenditurà quali passano e quali no ")
+                else:
+                    letto3 = input(f"Arrivati sulla seconda fenditura quindi vediamo in base alle dimensioni della seconda fenditurà quali passano e quali no \n\nAVANTI\n")
+                for i in range(Fascio1.attuale_num_ioni()):
+                    if (Fascio1.mostra_ione(i) != 0): #siccome la distribuzione sul generatore di ioni è equiprobabile modifico solo la posizione di un estremo della fenditura l'altro lo lascio a zero
+                        if ((Fascio1.mostra_ione(i).mostra_z() < 0) or (Fascio1.mostra_ione(i).mostra_z() > lista_altezze_fenditura2[alt_fendit])): #ione sbatte sulla fenditura
+                            lista_non_pas2.append(i)
+                            Fascio1.rimuovi_peso_massa(round(float(Fascio1.mostra_ione(i).mostra_massa())/(1.67 * pow(10,-27))))    
+                            Fascio1.perdo_ione(i)
+                        else:
+                            Fascio1.mostra_ione(i).modifica_posizione_x(pos_x_A2) #ho aggiornato la posizione x dello ione alla seconda fenditura
+                
+                #print(f"Gli ioni nuemro #{ lista_non_pas2 } non sono passati sulla fenditura A2") FA UN SACCO DI OUTPUT
+                print(f"sono passati attraverso la fenditura A2 { Fascio1.attuale_num_ioni() } ioni su { Fascio1.attuale_num_ioni() + len(lista_non_pas2)}")      
+                Fascio1.svuota_zeri() #devo rimuovere gli zeri dato che prima per non perdere il ciclo avevo sostituito gli elementi con degli zeri
+                print(Fascio1.mostra_massa_pesi())
+               
+                Schermo1 = Schermo(num_pixel_prova,p_alto_Schermo,p_basso_Schermo) #genero lo schermo di dimensione (schermo_high - schermo_low)
+                #Schermo2 = Schermo(num_pixel_prova,p_alto_Schermo,p_basso_Schermo) #genero lo schermo di dimensione (schermo_high - schermo_low)
+
+                dim_pixel = Schermo1.mostra_altezza() / Schermo1.mostra_num_pixel()
+
+                #aggiungo tutti i pixel allo schermo
+                for i in range(Schermo1.numero_pixel):
+                    Schermo1.aggiungi_pixel(Pixel(i,dim_pixel,0)) 
+                
+                """for j in range(Schermo2.numero_pixel):
+                    Schermo2.aggiungi_pixel(Pixel(j,dim_pixel,0))"""
+
+                #IONI SBATTONO SULLO SCHERMO
+                for i in range( Fascio1.attuale_num_ioni() ):
+                    raggio_curva = eq_raggio( float(Fascio1.mostra_ione(i).mostra_massa()) , v_selezionata, q_default, B_default) #calcolo la curvatura di questo ione
+                    diametro = 2 * raggio_curva
+                    Fascio1.mostra_ione(i).modifica_posizione_z(Fascio1.mostra_ione(i).mostra_z() + diametro) #modifico la posizione post curvatura
+                    Schermo1.arriva_ione_no_output(Fascio1.mostra_ione(i).mostra_z(), Fascio1.mostra_ione(i).mostra_numero()) #lo ione sbatte sullo schermo
+
+                numeri_ordinati = []
+                numeri_ordinati2 = []
+                for i in range(Schermo1.mostra_num_pixel()):
+                    Schermo1.aggiungi_ls_rivel(Schermo1.lista_pixel[i].mostra_num_rilevazioni())
+                    numeri_ordinati.append(i-2)
+
+                """for j in range(Schermo2.mostra_num_pixel()):
+                    Schermo2.aggiungi_ls_rivel(Schermo1.lista_pixel[j].mostra_num_rilevazioni())
+                    numeri_ordinati2.append(i-2)"""
+                    
+
+                print(f"\n \nCon #{num_pixel_prova} pixel sullo schermo ho rilevato {Schermo1.totale_rilevazioni()} su {Fascio1.attuale_num_ioni()} arrivati allo schermo")
+                setup = [lista_altezze_fenditura2[alt_fendit],num_pixel_prova,Schermo1.totale_rilevazioni()]
+
+                print(f" In teoria erano {Fascio1.mostra_massa_pesi()} e io ho rilevato :")
+                setup.append(Fascio1.mostra_massa_pesi())
+
+                for i in range(len(Schermo1.mostra_ls_rivel())):
+                    if (Schermo1.mostra_ls_rivel()[i] != 0):
+                        print(f"{Schermo1.mostra_ls_rivel()[i]} ioni sul pixel {i}")
+                        risposte = [i+1,Schermo1.mostra_ls_rivel()[i]]
+                        setup.append(risposte)
+                print(f"reminder: fenditura alta {lista_altezze_fenditura2[alt_fendit]} e {num_pixel_prova} pixel")
+
+                risultati.append(setup)
+                Fascio1.svuota_zeri()
+                #GRAFICO DEI RISULTATI
+                
+                """plt.hist( numeri_ordinati, weights =Schermo1.mostra_ls_rivel(), bins=Schermo1.mostra_num_pixel(), color='orange' , alpha = 0.5, label = k)
+                #plt.hist( numeri_ordinati2, weights =Schermo2.mostra_ls_rivel(), bins=Schermo2.mostra_num_pixel(), color='blue' , alpha = 0.5, label = l)
+
+                plt.xlabel('Pixel Numero')
+                plt.ylabel('Num Rilevazioni')
+                plt.show()"""
+
+        print(f"\n\n\n ####################### Quindi i risultati delle simulazioni con i vari setup sono: #######################\n ")
+        for k in range(len(risultati)):
+            print(f"Nella simulazione {k} con {risultati[k][1]} pixel e fenditure alte {risultati[k][0]} ho trovato:")
+            print(f"{risultati[k][2]} ioni su 4000, nello specifico sono arrivati (sopra teorici sotto rilevati):")
+            risultati[k][3].pop(0)
+            print(risultati[k][3])
+            concatena = []
+            for i in range(4,len(risultati[k]),1):
+                concatena.append(risultati[k][i])
+            print(concatena)
+            print("\n")
+
+        print("###################################################################################################\n\n")
+
+        print("Dai risultati dei setup analizzati al variare di alcuni isotopi è risultato che la configurazione migliore per: numero minore di pixel con risoluziona A = 1, senza perdere troppi ioni a ogni run è data da ")
+        print(" 213 PIXEL E LARGHEZZA DELLA FENDITURA 0.0025 m (2.5mm)\n")
+
+
+
+
+################################################ SCELTA 2 ##########################################################################
+    elif (azione == "2"):
         #Considerazioni iniziali (aspetto che siano lette prima di andare avanti)
         letto = input("Considero uno spettrometro di massa posizionato come segue:\n\n -Asse x: asse lungo cui si muove lo ione (da sinistra a destra) \n -Asse y: entrante nello schermo (stessa dirazione campo magnetico B \n -Asse z: dal basso verso l'alto (verso opposto al campo elettico) \n -Origine degli assi X: sulla seconda fenditura (A2) \n -Origine degli assi Y: sulla parte più bassa della fenditura A2 \n\n PREMI QUALUNQUE TASTO PER ANDARE AVANTI\n")
 
@@ -296,7 +453,7 @@ while Acceso == True:
                 Fascio1.mostra_ione(i).modifica_posizione_x(pos_x_A1) #ho aggiornato la posizione x dello ione alla prima fenditura
                 
         print(f"Gli ioni nuemro #{ lista_non_pas1 } non sono passati sulla fenditura A1")
-        print(f"sono passati attraverso la fenditura A1 solo { Fascio1.attuale_num_ioni() } su { Fascio1.attuale_num_ioni() + len(lista_non_pas1)}")
+        print(f"sono passati attraverso la fenditura A1 { Fascio1.attuale_num_ioni() } ioni su { Fascio1.attuale_num_ioni() + len(lista_non_pas1)}")
         Fascio1.svuota_zeri() #devo rimuovere gli zeri dato che prima per non perdere il ciclo avevo sostituito gli elementi con degli zeri
 
         """ 
@@ -333,7 +490,7 @@ while Acceso == True:
                     Fascio1.mostra_ione(i).modifica_posizione_x(pos_x_A2) #ho aggiornato la posizione x dello ione alla seconda fenditura
         
         print(f"Gli ioni nuemro #{ lista_non_pas2 } non sono passati sulla fenditura A2")
-        print(f"sono passati attraverso la fenditura A2 solo { Fascio1.attuale_num_ioni() } su { Fascio1.attuale_num_ioni() + len(lista_non_pas2)}")      
+        print(f"sono passati attraverso la fenditura A2 { Fascio1.attuale_num_ioni() } ioni su { Fascio1.attuale_num_ioni() + len(lista_non_pas2)}")      
         Fascio1.svuota_zeri() #devo rimuovere gli zeri dato che prima per non perdere il ciclo avevo sostituito gli elementi con degli zeri
         print(Fascio1.mostra_massa_pesi())
 
@@ -342,7 +499,7 @@ while Acceso == True:
 
         letto4 = input(f"Gli ioni stanno venendo ruotati da un campo magnetico di intensità { B_default} tesla e vanno a sbattere contro lo schermo \n\nAVANTI\n")
         #Creo schermo
-        k= 213 #213
+        k= 213 #numero pixel ottimizzato
         Schermo1 = Schermo(k,p_alto_Schermo,p_basso_Schermo) #genero lo schermo di dimensione (schermo_high - schermo_low)
         dim_pixel = Schermo1.mostra_altezza() / Schermo1.mostra_num_pixel()
 
@@ -360,7 +517,7 @@ while Acceso == True:
         numeri_ordinati = []
         for i in range(Schermo1.mostra_num_pixel()):
             Schermo1.aggiungi_ls_rivel(Schermo1.lista_pixel[i].mostra_num_rilevazioni())
-            numeri_ordinati.append(i-2)
+            numeri_ordinati.append(i-2) 
 
         print(f"\n \nCon #{k} pixel sullo schermo ho rilevato {Schermo1.totale_rilevazioni()} su {Fascio1.attuale_num_ioni()}")
         print(f"\nAl momento dello scontro con lo schemo avevo: {Fascio1.mostra_massa_pesi()} dove [massa ione, numero ioni presenti]\n")
@@ -374,14 +531,8 @@ while Acceso == True:
         plt.show()
 
 
-
-
-
-
-
-
-######################## AZIONE 2#################################################################################################À
-    elif (azione == "2"):
+################################################ SCELTA 3 ################################################################################À
+    elif (azione == "3"):
         """HO SCRITTO QUESTA PARTE CON L'IDEA DI CREARE ANCHE UN'ALTRA OPZIONE CHE TI PERMETTESSE DI SCHEGLIERE IN DIRETTA LA MOLECOLA DA ANALIZZARE
         tavola_periodica = {"H": 1, "He" : 4, "Li" : 7, "Be" : 9, "B" : 11, "C" : 12, "N" : 14, "O" : 16, "F" : 19, "Ne" : 20, "Na" : 23, "Mg" : 24, "Al" : 27, "Si" : 28, "P" : 31, "S": 32, "Cl":36, "Ar":39, "K":40, "Ca":41, "Sc":45, "Ti":48, "V":51, "Cr": 52, "Mn":55, "Fe":56, "Co":59, "Ni":58, "Cu" : 63, "Zn" : 65, "Ga" : 70, "Ge" : 72	,"As" : 75	,"Se" : 79	,"Br" : 80	,"Kr" : 84	,"Rb" : 85	,"Sr" : 88	,"Y" :  89	,"Zr" : 91, "Nb" : 93,"Mo" : 96	,"Tc" : 98	,"Ru" : 101	,"Rh" : 103	,"Pd" : 106	,"Ag" : 108	,"Cd" : 113	,"In" : 115	,"Sn" : 119	,"Sb" :  122	,"Te" : 128	,"I" :  127	,"Xe" : 131	,"Cs" : 133	,"Ba" : 137	,"La" : 139	,"Ce" : 140	,"Pr" : 141	,"Nd" : 144	,"Pm" : 145	,"Sm" : 150	,"Eu" : 152	,"Gd" : 157	,"Tb" : 159	,"Dy" : 162	,"Ho" : 165	,"Er" : 167	,"Tm" : 169	,"Yb" : 173, "Lu" : 175 ,"Hf" : 178 ,"Ta" : 181	,"W" :  183	,"Re" : 186	,"Os" : 190	,"Ir" : 192	,"Pt" : 195	,"Au" : 197	,"Hg" : 200	,"Tl" : 204	,"Pb" : 207  ,"Bi" : 208	,"Po" : 209	,"At" : 210	,"Rn" : 86	,"Fr" : 87	,"Ra" : 88	,"Ac" : 89	,"Th" : 90	,"Pa" : 91	,"U" :  92	,"Np" : 93	,"Pu" : 94	,"Am" : 95	,"Cm" : 96	,"Bk" : 97	,"Cf" : 98	,"Es" : 99	,"Fm" : 100		,"Md" : 101	,"No" : 102	,"Lr" : 103	,"Rf" : 104	,"Db" : 105		,"Sg" : 106	  ,"Bh" : 107	,"Hs" : 108	,"Mt" : 109	,"Ds" : 110	,"Rg" : 111	,"Cn" : 112	,"Nh" : 113	 ,"Fl" : 114	,"Mc" : 115	,"Lv" : 116	,"Ts" : 117	,"Og" : 118}
         """
@@ -435,23 +586,19 @@ while Acceso == True:
         Fascio2 = Fascio(num_ioni_iniziale)
         #len(molecola)
         for j in range(len(molecola)):
-            print(round(num_ioni_iniziale * molecola[j][2]))
             for i in range( round(num_ioni_iniziale * molecola[j][2]) ):
                 #print(i)
                 altezza = np.random.uniform(low = p_basso_generatore ,high = p_alto_generatore, size = 1) #genero posizione casuale
                 altezza_z = float(altezza)
                 Fascio2.aggiungi_ione(Ione(i,pos_x_generatore,0,altezza_z,v_selezionata,0,0,int(molecola[j][1]))) #ho messo solo la velocità su x dato che non ho abbastanza informazioni per fare il programma piu completo
                 Fascio2.aggiungi_massa_pesi(int(molecola[j][1]))
-            print(f"\nAttualmente ci sono: { Fascio2.attuale_num_ioni() * (molecola[j][2]) } atomi di {int(molecola[j][1])}{molecola[j][0]} \n")
+            print(f"Ci sono: { Fascio2.attuale_num_ioni() * (molecola[j][2]) } atomi di {int(molecola[j][1])}{molecola[j][0]} \n")
 
-            print(Fascio2.mostra_massa_pesi())
+            
         
         #FENDITURA 1
         lista_non_pas1 = []
         letto2 = input(f"Gli ioni appena generati stanno passando attraverso la prima fenditura quindi vediamo in base alla loro posizione di generazione quali passano e quali no \n\nAVANTI\n")
-        print(Fascio2.attuale_num_ioni())
-        print(range(Fascio2.attuale_num_ioni()))
-        print(len(Fascio2.Insieme_ioni))
         for i in range(Fascio2.attuale_num_ioni()):
             if ((Fascio2.mostra_ione(i).mostra_z() < p_basso_A1) or (Fascio2.mostra_ione(i).mostra_z() > p_alto_A1)): #ione sbatte sulla fenditura
                 lista_non_pas1.append(i)
@@ -460,14 +607,13 @@ while Acceso == True:
             else:
                 Fascio2.mostra_ione(i).modifica_posizione_x(pos_x_A1) #ho aggiornato la posizione x dello ione alla prima fenditura
                 
-        print(f"Gli ioni nuemro #{ lista_non_pas1 } non sono passati sulla fenditura A1")
-        print(f"sono passati attraverso la fenditura A1 solo { Fascio2.attuale_num_ioni() } su { Fascio2.attuale_num_ioni() + len(lista_non_pas1)}")
+        print(f"\n\nGli ioni nuemro #{ lista_non_pas1 } non sono passati sulla fenditura A1")
+        print(f"sono passati attraverso la fenditura A1 { Fascio2.attuale_num_ioni() } ioni su { Fascio2.attuale_num_ioni() + len(lista_non_pas1)}")
         Fascio2.svuota_zeri() #devo rimuovere gli zeri dato che prima per non perdere il ciclo avevo sostituito gli elementi con degli zeri
-        print(Fascio2.mostra_massa_pesi())
 
         #FENDITURA 2
         lista_non_pas2 = []
-        letto3 = input(f"Gli ioni appena generati stanno passando attraverso la seconda fenditura quindi vediamo in base alla loro posizione di generazione quali passano e quali no \n\nAVANTI\n")
+        letto3 = input(f"\n\nGli ioni stanno passando attraverso la seconda fenditura quindi vediamo in base alla loro posizione di generazione quali passano e quali no \n\nAVANTI\n")
         for i in range(Fascio2.attuale_num_ioni()):
             if ((Fascio2.mostra_ione(i).mostra_z() < p_basso_A2) or (Fascio2.mostra_ione(i).mostra_z() > p_alto_A2)): #ione sbatte sulla fenditura
                 lista_non_pas2.append(i)
@@ -477,15 +623,14 @@ while Acceso == True:
                 Fascio2.mostra_ione(i).modifica_posizione_x(pos_x_A2) #ho aggiornato la posizione x dello ione alla prima fenditura
                 
         print(f"Gli ioni nuemro #{ lista_non_pas2 } non sono passati sulla fenditura A2")
-        print(f"sono passati attraverso la fenditura A2 solo { Fascio2.attuale_num_ioni() } su { Fascio2.attuale_num_ioni() + len(lista_non_pas2)}")
+        print(f"sono passati attraverso la fenditura A2 { Fascio2.attuale_num_ioni() } ioni su { Fascio2.attuale_num_ioni() + len(lista_non_pas2)}")
         Fascio2.svuota_zeri() #devo rimuovere gli zeri dato che prima per non perdere il ciclo avevo sostituito gli elementi con degli zeri
-        print(Fascio2.mostra_massa_pesi())
 
         #CAMPO MAGNETICO
-        letto4 = input(f"Gli ioni stanno venendo ruotati da un campo magnetico di intensità { B_default} tesla e vanno a sbattere contro lo schermo \n\nAVANTI\n")
+        letto4 = input(f"\n\nGli ioni stanno venendo ruotati da un campo magnetico di intensità { B_default} tesla e vanno a sbattere contro lo schermo \n\nAVANTI\n")
 
         #Creo schermo
-        k= 210 #numero pixel
+        k= 213 
         Schermo2 = Schermo(k,p_alto_Schermo,p_basso_Schermo) #genero lo schermo
         #lo schermo ha dimensione (schermo_high - schermo_low)
         dim_pixel = Schermo2.mostra_altezza() / Schermo2.mostra_num_pixel()
@@ -502,7 +647,7 @@ while Acceso == True:
             Schermo2.arriva_ione(Fascio2.mostra_ione(i).mostra_z(), Fascio2.mostra_ione(i).mostra_numero()) #lo ione sbatte sullo schermo
 
         numeri_ordinati = []
-        for i in range(210):
+        for i in range(k): 
             Schermo2.aggiungi_ls_rivel(Schermo2.lista_pixel[i].mostra_num_rilevazioni())
             numeri_ordinati.append(i-2)
         print(f"\n \nCon #{k} pixel sullo schermo ho rilevato {Schermo2.totale_rilevazioni()} su {Fascio2.attuale_num_ioni()}")
@@ -524,28 +669,6 @@ while Acceso == True:
     else:
         print("Inserire un numero valido\n\n\n")
 
-
-
-        """
-        numero_valido2 = False
-        num_pixel = 0
-        while numero_valido2 == False:
-            try:
-                num_pixel = input(f'Quanti pixel ha lo schermo?\t')
-                num_pixel = int(num_pixel)
-                numero_valido2 = True
-            except:
-                print('Non è un numero valido, riprova\n')
-        
-    
-        """  
-
-        #####for k in range(1,400,1):  
-#FARE IL CICLO DI ITERAZIONE CHE DA RISULTATI DIVERSI IN BASE AL NUMERO DI PIXEL PER MOSTRERE IL NUMERO MINIMO DI PIXEL
-        #for i in range(Schermo1.mostra_num_pixel()):
-
-#calcolo la massima deflessione possibile con questi dati cosi da usarla per le dimensioni dello schermo #1.3108614232209737
-#max_deflessione = eq_raggio(210 * pow(10,-27),v_selezionata,q_default,B_default)
 
 
 
