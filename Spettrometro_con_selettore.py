@@ -1,4 +1,4 @@
-#spettrometro di massa con selettore di velocità
+#spettrometro di massa con selettore di velocità BY ALESSANDRO MARINI
 
 """IN TUTTO IL CODICE SONO SCRITTE DIVERS PARTI E SPUNTI FRA TRIPLI APICI DOVE IPOTIZZO UN POSSIBILE CODICE ALTERNATIVO PER UNA 
 SIMULAZIONE PIU COMPLETA 3-DIMENSIONALE E DETTAGLIATA, SUPPONENDO DI AVER RICEVUTO PIU DATI INIZIALI RIGUARDO AL PROBLEMA"""
@@ -22,20 +22,20 @@ B_default = 0.1 #[in T]
 q_default = 1.602 * pow(10,-19) #[in kg]
 
 #dimensione e posizione generatore di ioni [m]
-p_alto_generatore = 0.055
-p_basso_generatore = 0.0525
+p_alto_generatore = 0.055#0.0555
+p_basso_generatore = 0.0525#0.052
 pos_x_generatore = -20
 
 #Prima Fenditura A1 ()
-p_alto_A1 = 0.07  #punto piu alto 0.1
-p_basso_A1 = 0.03  #punto piu basso della fenditura  0
+p_alto_A1 = 0.055 #punto piu alto 0.1
+p_basso_A1 = 0.05  #punto piu basso della fenditura  0
 pos_x_A1 = -10 #distanza della fenditura A1 dall origine (ho messo meno poiche è prima dell'origine)
 """ se avessi avuto piu informazioni per lavorare in 3D avrei aggiunto: 
 A1_depth = 0.1 #larghezza """
 
 #Seconda Fenditura A2 (10 micrometri)
-p_alto_A2 =  0.07#0.05 
-p_basso_A2 = 0.03#0.045  #punto piu basso della fenditura
+p_alto_A2 =  0.0555#0.05 
+p_basso_A2 = 0.0525#0.045  #punto piu basso della fenditura
 pos_x_A2 = -5 #distanza della fenditura A2 dall origine (ho messo meno poiche è prima dell'origine)
 """ se avessi avuto piu informazioni per lavorare in 3D avrei aggiunto: 
 A2_depth = 0.1 #larghezza """
@@ -236,8 +236,6 @@ while Acceso == True:
     3) Produzione del grafico per una simulazione del macchinario con materiali a scelta (con relativa abbondanza isotopica) \n\n 
     0) ESCI \n\n""")
 
-
-
 ################################################ SCELTA 1 ##########################################################################
     if (azione == "1"):
         #Finestra di dialogo per scelta numero di massa, con filtraggio input non validi
@@ -273,6 +271,7 @@ while Acceso == True:
         p_alto_generatore_0 = 0.1
         p_basso_generatore_0 = 0
         
+        PROVO = []
         risultati = []
         for alt_fendit in range(len(lista_altezze_fenditura2)):
             for num_pixel_prova in lista_num_pixel:
@@ -306,22 +305,16 @@ while Acceso == True:
                         else:
                             Fascio1.mostra_ione(i).modifica_posizione_x(pos_x_A2) #ho aggiornato la posizione x dello ione alla seconda fenditura
                 
-                #print(f"Gli ioni nuemro #{ lista_non_pas2 } non sono passati sulla fenditura A2") FA UN SACCO DI OUTPUT
                 print(f"sono passati attraverso la fenditura A2 { Fascio1.attuale_num_ioni() } ioni su { Fascio1.attuale_num_ioni() + len(lista_non_pas2)}")      
                 Fascio1.svuota_zeri() #devo rimuovere gli zeri dato che prima per non perdere il ciclo avevo sostituito gli elementi con degli zeri
                 print(Fascio1.mostra_massa_pesi())
                
                 Schermo1 = Schermo(num_pixel_prova,p_alto_Schermo,p_basso_Schermo) #genero lo schermo di dimensione (schermo_high - schermo_low)
-                #Schermo2 = Schermo(num_pixel_prova,p_alto_Schermo,p_basso_Schermo) #genero lo schermo di dimensione (schermo_high - schermo_low)
-
                 dim_pixel = Schermo1.mostra_altezza() / Schermo1.mostra_num_pixel()
 
                 #aggiungo tutti i pixel allo schermo
                 for i in range(Schermo1.numero_pixel):
                     Schermo1.aggiungi_pixel(Pixel(i,dim_pixel,0)) 
-                
-                """for j in range(Schermo2.numero_pixel):
-                    Schermo2.aggiungi_pixel(Pixel(j,dim_pixel,0))"""
 
                 #IONI SBATTONO SULLO SCHERMO
                 for i in range( Fascio1.attuale_num_ioni() ):
@@ -331,15 +324,9 @@ while Acceso == True:
                     Schermo1.arriva_ione_no_output(Fascio1.mostra_ione(i).mostra_z(), Fascio1.mostra_ione(i).mostra_numero()) #lo ione sbatte sullo schermo
 
                 numeri_ordinati = []
-                numeri_ordinati2 = []
                 for i in range(Schermo1.mostra_num_pixel()):
                     Schermo1.aggiungi_ls_rivel(Schermo1.lista_pixel[i].mostra_num_rilevazioni())
                     numeri_ordinati.append(i-2)
-
-                """for j in range(Schermo2.mostra_num_pixel()):
-                    Schermo2.aggiungi_ls_rivel(Schermo1.lista_pixel[j].mostra_num_rilevazioni())
-                    numeri_ordinati2.append(i-2)"""
-                    
 
                 print(f"\n \nCon #{num_pixel_prova} pixel sullo schermo ho rilevato {Schermo1.totale_rilevazioni()} su {Fascio1.attuale_num_ioni()} arrivati allo schermo")
                 setup = [lista_altezze_fenditura2[alt_fendit],num_pixel_prova,Schermo1.totale_rilevazioni()]
@@ -353,37 +340,93 @@ while Acceso == True:
                         risposte = [i+1,Schermo1.mostra_ls_rivel()[i]]
                         setup.append(risposte)
                 print(f"reminder: fenditura alta {lista_altezze_fenditura2[alt_fendit]} e {num_pixel_prova} pixel")
-
                 risultati.append(setup)
                 Fascio1.svuota_zeri()
+                PROVO.append(Schermo1.mostra_ls_rivel())
                 #GRAFICO DEI RISULTATI
-                
-                """plt.hist( numeri_ordinati, weights =Schermo1.mostra_ls_rivel(), bins=Schermo1.mostra_num_pixel(), color='orange' , alpha = 0.5, label = k)
-                #plt.hist( numeri_ordinati2, weights =Schermo2.mostra_ls_rivel(), bins=Schermo2.mostra_num_pixel(), color='blue' , alpha = 0.5, label = l)
-
-                plt.xlabel('Pixel Numero')
-                plt.ylabel('Num Rilevazioni')
-                plt.show()"""
-
+    
         print(f"\n\n\n ####################### Quindi i risultati delle simulazioni con i vari setup sono: #######################\n ")
         for k in range(len(risultati)):
             print(f"Nella simulazione {k} con {risultati[k][1]} pixel e fenditure alte {risultati[k][0]} ho trovato:")
             print(f"{risultati[k][2]} ioni su 4000, nello specifico sono arrivati (sopra teorici sotto rilevati):")
             risultati[k][3].pop(0)
             print(risultati[k][3])
-            concatena = []
-            for i in range(4,len(risultati[k]),1):
-                concatena.append(risultati[k][i])
-            print(concatena)
             print("\n")
 
         print("###################################################################################################\n\n")
+        print("COME SARÀ POSSIBILE VISUALIZZARE DAI GRAFICI\n")
+        print("Le prime righe con grandezze delle fenditure molto piccole danno pochi risultati ")
+        print("Mentre le ultime colonne sulla destra danno risultati numericamente errati a causa dei troppi pixel")
+        print("Allo stesso modo però fenditure troppo larghe spesso non consentono di distinguere due ioni\n\n")
+        print("DA SINISTRA A DESTRA -> Numero crescente di pixel")
+        print("DA SOPRA A SOTTO ->Grandezza crescente della fenditura (verso il basso)\n\n")
+        print("CARICANDO I 48 GRAFICI")
+        
+        numeri = [] #creazione delle liste numerate per numeri assi x dei grafici
+        for a in range(49):
+            sezione = []
+            for b in range(len(PROVO[a])):
+                sezione.append(int(b))
+            numeri.append(sezione)
 
+        #CREAZIONE DI 48 GRAFICI
+        fig, axs = plt.subplots(7,7)
+        axs[0,0].hist( numeri[0], weights =PROVO[0], bins=Schermo1.mostra_num_pixel(), color='black' , alpha = 0.5, label = k)
+        axs[0,1].hist( numeri[1], weights =PROVO[1], bins=Schermo1.mostra_num_pixel(), color='black' , alpha = 0.5, label = k)
+        axs[0,2].hist( numeri[2], weights =PROVO[2], bins=Schermo1.mostra_num_pixel(), color='black' , alpha = 0.5, label = k)
+        axs[0,3].hist( numeri[3], weights =PROVO[3], bins=Schermo1.mostra_num_pixel(), color='black' , alpha = 0.5, label = k)
+        axs[0,4].hist( numeri[4], weights =PROVO[4], bins=Schermo1.mostra_num_pixel(), color='black' , alpha = 0.5, label = k)
+        axs[0,5].hist( numeri[5], weights =PROVO[5], bins=Schermo1.mostra_num_pixel(), color='black' , alpha = 0.5, label = k)
+        axs[0,6].hist( numeri[6], weights =PROVO[6], bins=Schermo1.mostra_num_pixel(), color='black' , alpha = 0.5, label = k)
+        axs[1,0].hist( numeri[7], weights =PROVO[7], bins=Schermo1.mostra_num_pixel(), color='orange' , alpha = 0.5, label = k)
+        axs[1,1].hist( numeri[8], weights =PROVO[8], bins=Schermo1.mostra_num_pixel(), color='orange' , alpha = 0.5, label = k)
+        axs[1,2].hist( numeri[9], weights =PROVO[9], bins=Schermo1.mostra_num_pixel(), color='orange' , alpha = 0.5, label = k)
+        axs[1,3].hist( numeri[10], weights =PROVO[10], bins=Schermo1.mostra_num_pixel(), color='orange' , alpha = 0.5, label = k)
+        axs[1,4].hist( numeri[11], weights =PROVO[11], bins=Schermo1.mostra_num_pixel(), color='orange' , alpha = 0.5, label = k)
+        axs[1,5].hist( numeri[12], weights =PROVO[12], bins=Schermo1.mostra_num_pixel(), color='orange' , alpha = 0.5, label = k)
+        axs[1,6].hist( numeri[13], weights =PROVO[13], bins=Schermo1.mostra_num_pixel(), color='orange' , alpha = 0.5, label = k)
+        axs[2,0].hist( numeri[14], weights =PROVO[14], bins=Schermo1.mostra_num_pixel(), color='purple' , alpha = 0.5, label = k)
+        axs[2,1].hist( numeri[15], weights =PROVO[15], bins=Schermo1.mostra_num_pixel(), color='purple' , alpha = 0.5, label = k)
+        axs[2,2].hist( numeri[16], weights =PROVO[16], bins=Schermo1.mostra_num_pixel(), color='purple' , alpha = 0.5, label = k)
+        axs[2,3].hist( numeri[17], weights =PROVO[17], bins=Schermo1.mostra_num_pixel(), color='purple' , alpha = 0.5, label = k)
+        axs[2,4].hist( numeri[18], weights =PROVO[18], bins=Schermo1.mostra_num_pixel(), color='purple' , alpha = 0.5, label = k)
+        axs[2,5].hist( numeri[19], weights =PROVO[19], bins=Schermo1.mostra_num_pixel(), color='purple' , alpha = 0.5, label = k)
+        axs[2,6].hist( numeri[20], weights =PROVO[20], bins=Schermo1.mostra_num_pixel(), color='purple' , alpha = 0.5, label = k)
+        axs[3,0].hist( numeri[21], weights =PROVO[21], bins=Schermo1.mostra_num_pixel(), color='lime' , alpha = 0.5, label = k)
+        axs[3,1].hist( numeri[22], weights =PROVO[22], bins=Schermo1.mostra_num_pixel(), color='lime' , alpha = 0.5, label = k)
+        axs[3,2].hist( numeri[23], weights =PROVO[23], bins=Schermo1.mostra_num_pixel(), color='lime' , alpha = 0.5, label = k)
+        axs[3,3].hist( numeri[24], weights =PROVO[24], bins=Schermo1.mostra_num_pixel(), color='lime' , alpha = 0.5, label = k)
+        axs[3,4].hist( numeri[25], weights =PROVO[25], bins=Schermo1.mostra_num_pixel(), color='lime' , alpha = 0.5, label = k)
+        axs[3,5].hist( numeri[26], weights =PROVO[26], bins=Schermo1.mostra_num_pixel(), color='lime' , alpha = 0.5, label = k)
+        axs[3,6].hist( numeri[27], weights =PROVO[27], bins=Schermo1.mostra_num_pixel(), color='lime' , alpha = 0.5, label = k)
+        axs[4,0].hist( numeri[28], weights =PROVO[28], bins=Schermo1.mostra_num_pixel(), color='red' , alpha = 0.5, label = k)
+        axs[4,1].hist( numeri[29], weights =PROVO[29], bins=Schermo1.mostra_num_pixel(), color='red' , alpha = 0.5, label = k)
+        axs[4,2].hist( numeri[30], weights =PROVO[30], bins=Schermo1.mostra_num_pixel(), color='red' , alpha = 0.5, label = k)
+        axs[4,3].hist( numeri[31], weights =PROVO[31], bins=Schermo1.mostra_num_pixel(), color='red' , alpha = 0.5, label = k)
+        axs[4,4].hist( numeri[32], weights =PROVO[32], bins=Schermo1.mostra_num_pixel(), color='red' , alpha = 0.5, label = k)
+        axs[4,5].hist( numeri[33], weights =PROVO[33], bins=Schermo1.mostra_num_pixel(), color='red' , alpha = 0.5, label = k)
+        axs[4,6].hist( numeri[34], weights =PROVO[34], bins=Schermo1.mostra_num_pixel(), color='red' , alpha = 0.5, label = k)
+        axs[5,0].hist( numeri[35], weights =PROVO[35], bins=Schermo1.mostra_num_pixel(), color='blue' , alpha = 0.5, label = k)
+        axs[5,1].hist( numeri[36], weights =PROVO[36], bins=Schermo1.mostra_num_pixel(), color='blue' , alpha = 0.5, label = k)
+        axs[5,2].hist( numeri[37], weights =PROVO[37], bins=Schermo1.mostra_num_pixel(), color='blue' , alpha = 0.5, label = k)
+        axs[5,3].hist( numeri[38], weights =PROVO[38], bins=Schermo1.mostra_num_pixel(), color='blue' , alpha = 0.5, label = k)
+        axs[5,4].hist( numeri[39], weights =PROVO[39], bins=Schermo1.mostra_num_pixel(), color='blue' , alpha = 0.5, label = k)
+        axs[5,5].hist( numeri[40], weights =PROVO[40], bins=Schermo1.mostra_num_pixel(), color='blue' , alpha = 0.5, label = k)
+        axs[5,6].hist( numeri[41], weights =PROVO[41], bins=Schermo1.mostra_num_pixel(), color='blue' , alpha = 0.5, label = k)
+        axs[6,0].hist( numeri[42], weights =PROVO[42], bins=Schermo1.mostra_num_pixel(), color='green' , alpha = 0.5, label = k)
+        axs[6,1].hist( numeri[43], weights =PROVO[43], bins=Schermo1.mostra_num_pixel(), color='green' , alpha = 0.5, label = k)
+        axs[6,2].hist( numeri[44], weights =PROVO[44], bins=Schermo1.mostra_num_pixel(), color='green' , alpha = 0.5, label = k)
+        axs[6,3].hist( numeri[45], weights =PROVO[45], bins=Schermo1.mostra_num_pixel(), color='green' , alpha = 0.5, label = k)
+        axs[6,4].hist( numeri[46], weights =PROVO[46], bins=Schermo1.mostra_num_pixel(), color='green' , alpha = 0.5, label = k)
+        axs[6,5].hist( numeri[47], weights =PROVO[47], bins=Schermo1.mostra_num_pixel(), color='green' , alpha = 0.5, label = k)
+        axs[6,6].hist( numeri[48], weights =PROVO[48], bins=Schermo1.mostra_num_pixel(), color='green' , alpha = 0.5, label = k)
+
+        #plt.xlabel("Numero crescente di pixel")
+        #plt.ylabel("Grandezza crescente della fenditura (verso il basso)") (LE LABEL non vanno )
+        plt.show()
+        print("###################################################################################################\n\n")
         print("Dai risultati dei setup analizzati al variare di alcuni isotopi è risultato che la configurazione migliore per: numero minore di pixel con risoluziona A = 1, senza perdere troppi ioni a ogni run è data da ")
         print(" 213 PIXEL E LARGHEZZA DELLA FENDITURA 0.0025 m (2.5mm)\n")
-
-
-
 
 ################################################ SCELTA 2 ##########################################################################
     elif (azione == "2"):
@@ -420,7 +463,6 @@ while Acceso == True:
 
         #GENERO UN FASCIO CON NUMERO DI IONI SCELTO PRIMA
         Fascio1 = Fascio(num_ioni_iniziale)
-
         #GENERAZIONE DI IONI (mi limito a generare ioni con posizione variabile sul generatore di ioni (ipotizzato bi dimensionale su xz ))
         #numeri generati pseudorandomicamente per la posizione delle particelle low = posizione punto piu basso fenditura A1, high punto piu alto 
         print(f"\n\nGenero { Fascio1.attuale_num_ioni() } sul generatore, con posizione casuale e massa casuale secondo una Gaussiana con centro massa = {num_massa} e sulle code isotopi.\n")
@@ -431,7 +473,6 @@ while Acceso == True:
             nuova_massa = round(float(massa_iosotopica)) #arrotondo la massa ad un numero intero
             Fascio1.aggiungi_ione(Ione(i,pos_x_generatore,0,altezza_z,v_selezionata,0,0, nuova_massa)) #ho messo solo la velocità su x dato che non ho abbastanza informazioni per fare il programma piu completo
             Fascio1.aggiungi_massa_pesi(nuova_massa)
-
         print(f"\nAttualmente ci sono: {Fascio1.mostra_massa_pesi()} dove [massa ione, numero ioni presenti]\n")
 
         """NEL CASO DI PIU DATI POTREI RANDOMIZZARE LE FLUTTUAZIONI SULLA VELOCITÀ DI USCITA DAL GENERATORE DI IONI"""
@@ -460,11 +501,9 @@ while Acceso == True:
         #ACCELERAZIONE DDP 
         CONOSCENDO LA DDP POTREI CALCOLARE LE COMPONENTI DELLA VELOCITÀ SU TRE ASSI DOPO L'ACCELLERAZIONE SUBITA DALLA DIFFERENZA DI POTENZIALE 
         """
-
         #DEFLESSIONE DEGLI IONI NEL SELETTORE DI VELOCITÀ
         #non c'è nessun filtraggio dato che di default tutti gli ioni hanno gia velocità 10^5 se avessi avuto più dati, quindi velocità random avrei fatto come scritto sotto
         print("\n\nGli ioni prodotti e sparati uno alla volta subiscono una deflessione nel selettore di velocità , infatti sono sottoposti ad un campo elettro magentico che lascia arrivare solo le velocità uguali a 10^5 m/s")
-
         """
         CONOSCENDO CAMPO ELETTRICO E MAGNETICO DEL SELETTORE POTREI CALCOLARE LE DEFLESSIONI E VEDERE QUALI IONI PASSANO E QUALI NO NEL SELETTORE ANCHE IN BASE ALLA LUNGHEZZA DEL SELETTORE E DELLA DISTANZA DI QUESTO DALLA SECONDA FENDITURA
         POTREI AGGIUNGERE SOPRA AL POSTO DI "ad un campo elettromagnetico..." ->  "sono sottoposti a \nForza elettica = -q*E \nForza magentica = q*v*B "
@@ -474,10 +513,8 @@ while Acceso == True:
         da questa divido fratto la massa dello ione per trovare l'accelerazione a = { (forza_magentica(q_default,v_selezionata,B_) + forza_elettrica(q_default, E_))/ float(Fascio1.mostra_ione(1).mostra_massa()) }, e da qui calcolare con il tempo di volo = {(v_accelerata/lunghezza_selettore)} la deflessione sull'asse z tramite la formula z = z0 + 1/2 * accelerazione * t_volo")
         # cosi potrei simulare esattamenti di quanto sono deflessi gli ioni con determinate caratteristiche e potrei vedere se anche se da deflessi riescono a passare nella seconda fenditura (in base anche alle dimensioni di questa, alle componenti del vettore tridimenzionale velocità e alla lunghezza del selettore)
         """
-
         #SECONDA FENDITURA
         print(f"\nAttualmente ci sono: {Fascio1.mostra_massa_pesi()} dove [massa ione, numero ioni presenti]\n")
-
         lista_non_pas2 = []
         letto3 = input(f"Arrivati sulla seconda fenditura quindi vediamo in base alle dimensioni della seconda fenditurà quali passano e quali no \n\nAVANTI\n")
         for i in range(Fascio1.attuale_num_ioni()):
@@ -494,9 +531,7 @@ while Acceso == True:
         Fascio1.svuota_zeri() #devo rimuovere gli zeri dato che prima per non perdere il ciclo avevo sostituito gli elementi con degli zeri
         print(Fascio1.mostra_massa_pesi())
 
-
         #CAMPO MAGNETICO   
-
         letto4 = input(f"Gli ioni stanno venendo ruotati da un campo magnetico di intensità { B_default} tesla e vanno a sbattere contro lo schermo \n\nAVANTI\n")
         #Creo schermo
         k= 213 #numero pixel ottimizzato
@@ -517,25 +552,36 @@ while Acceso == True:
         numeri_ordinati = []
         for i in range(Schermo1.mostra_num_pixel()):
             Schermo1.aggiungi_ls_rivel(Schermo1.lista_pixel[i].mostra_num_rilevazioni())
-            numeri_ordinati.append(i-2) 
+            if num_massa <= 43:
+                numeri_ordinati.append(i-2)
+            elif num_massa>43 and num_massa <= 86:
+                numeri_ordinati.append(i-1)
+            elif num_massa>86 and num_massa <= 129:
+                numeri_ordinati.append(i+0)
+            elif num_massa>129 and num_massa <= 172:
+                numeri_ordinati.append(i+1)
+            else:
+                numeri_ordinati.append(i+2)
 
         print(f"\n \nCon #{k} pixel sullo schermo ho rilevato {Schermo1.totale_rilevazioni()} su {Fascio1.attuale_num_ioni()}")
         print(f"\nAl momento dello scontro con lo schemo avevo: {Fascio1.mostra_massa_pesi()} dove [massa ione, numero ioni presenti]\n")
 
-            
         #GRAFICO DEI RISULTATI
-        
         plt.hist( numeri_ordinati, weights =Schermo1.mostra_ls_rivel(), bins=Schermo1.mostra_num_pixel(), color='orange' )
         plt.xlabel('Pixel Numero')
         plt.ylabel('Num Rilevazioni')
         plt.show()
 
-
 ################################################ SCELTA 3 ################################################################################À
     elif (azione == "3"):
+        """CON QUESTO GENERATORE E FENDITURE PIU LARGHE VIENE PERFETTO
+        p_alto_generatore = 0.055
+        p_basso_generatore = 0.0525"""
         """HO SCRITTO QUESTA PARTE CON L'IDEA DI CREARE ANCHE UN'ALTRA OPZIONE CHE TI PERMETTESSE DI SCHEGLIERE IN DIRETTA LA MOLECOLA DA ANALIZZARE
         tavola_periodica = {"H": 1, "He" : 4, "Li" : 7, "Be" : 9, "B" : 11, "C" : 12, "N" : 14, "O" : 16, "F" : 19, "Ne" : 20, "Na" : 23, "Mg" : 24, "Al" : 27, "Si" : 28, "P" : 31, "S": 32, "Cl":36, "Ar":39, "K":40, "Ca":41, "Sc":45, "Ti":48, "V":51, "Cr": 52, "Mn":55, "Fe":56, "Co":59, "Ni":58, "Cu" : 63, "Zn" : 65, "Ga" : 70, "Ge" : 72	,"As" : 75	,"Se" : 79	,"Br" : 80	,"Kr" : 84	,"Rb" : 85	,"Sr" : 88	,"Y" :  89	,"Zr" : 91, "Nb" : 93,"Mo" : 96	,"Tc" : 98	,"Ru" : 101	,"Rh" : 103	,"Pd" : 106	,"Ag" : 108	,"Cd" : 113	,"In" : 115	,"Sn" : 119	,"Sb" :  122	,"Te" : 128	,"I" :  127	,"Xe" : 131	,"Cs" : 133	,"Ba" : 137	,"La" : 139	,"Ce" : 140	,"Pr" : 141	,"Nd" : 144	,"Pm" : 145	,"Sm" : 150	,"Eu" : 152	,"Gd" : 157	,"Tb" : 159	,"Dy" : 162	,"Ho" : 165	,"Er" : 167	,"Tm" : 169	,"Yb" : 173, "Lu" : 175 ,"Hf" : 178 ,"Ta" : 181	,"W" :  183	,"Re" : 186	,"Os" : 190	,"Ir" : 192	,"Pt" : 195	,"Au" : 197	,"Hg" : 200	,"Tl" : 204	,"Pb" : 207  ,"Bi" : 208	,"Po" : 209	,"At" : 210	,"Rn" : 86	,"Fr" : 87	,"Ra" : 88	,"Ac" : 89	,"Th" : 90	,"Pa" : 91	,"U" :  92	,"Np" : 93	,"Pu" : 94	,"Am" : 95	,"Cm" : 96	,"Bk" : 97	,"Cf" : 98	,"Es" : 99	,"Fm" : 100		,"Md" : 101	,"No" : 102	,"Lr" : 103	,"Rf" : 104	,"Db" : 105		,"Sg" : 106	  ,"Bh" : 107	,"Hs" : 108	,"Mt" : 109	,"Ds" : 110	,"Rg" : 111	,"Cn" : 112	,"Nh" : 113	 ,"Fl" : 114	,"Mc" : 115	,"Lv" : 116	,"Ts" : 117	,"Og" : 118}
         """
+        def calcola_abbondanza_isotopica(massa_isotopo, massa_tot):
+            return(float(massa_isotopo/massa_tot))
 
         valido_input = False
         while valido_input == False:
@@ -594,8 +640,6 @@ while Acceso == True:
                 Fascio2.aggiungi_massa_pesi(int(molecola[j][1]))
             print(f"Ci sono: { Fascio2.attuale_num_ioni() * (molecola[j][2]) } atomi di {int(molecola[j][1])}{molecola[j][0]} \n")
 
-            
-        
         #FENDITURA 1
         lista_non_pas1 = []
         letto2 = input(f"Gli ioni appena generati stanno passando attraverso la prima fenditura quindi vediamo in base alla loro posizione di generazione quali passano e quali no \n\nAVANTI\n")
@@ -652,6 +696,9 @@ while Acceso == True:
             numeri_ordinati.append(i-2)
         print(f"\n \nCon #{k} pixel sullo schermo ho rilevato {Schermo2.totale_rilevazioni()} su {Fascio2.attuale_num_ioni()}")
         print(f"\nAl momento dello scontro con lo schemo ho: {Fascio2.mostra_massa_pesi()} dove [massa ione, numero ioni presenti]\n")
+        print("Quindi calcolando le ABBONDANZE ISOTOPICHE HO")
+        for i in range(len(Fascio2.mostra_massa_pesi())):
+            print(f" {(calcola_abbondanza_isotopica(int(Fascio2.mostra_massa_pesi()[i][1]), int(Fascio2.attuale_num_ioni()))*100)}% abbondanza isotopica di ioni con massa {Fascio2.mostra_massa_pesi()[i][0]}")
 
         #GRAFICO DEL RISULTATO
         plt.hist( numeri_ordinati, weights =Schermo2.mostra_ls_rivel(), bins=Schermo2.mostra_num_pixel(), color='orange' )
@@ -659,9 +706,6 @@ while Acceso == True:
         plt.ylabel('Num Rilevazioni')
         plt.show()
             
-
-
-
 ##################################### SCELTA 0 ########################################################################################À
     elif(azione == "0"):
         Acceso = False #spengo l'applicazione
